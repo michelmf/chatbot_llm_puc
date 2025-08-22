@@ -2,6 +2,7 @@
 Retrieval utilities for handling and processing retrieval tasks.
 """
 import os
+from pathlib import Path
 
 import faiss
 import numpy as np
@@ -17,20 +18,44 @@ from .text import jsonl_read
 load_dotenv()
 
 
+def check_index_exists() -> bool:
+    """
+    Verifica se os arquivos necessários para a indexação existem.
+
+    Returns:
+        bool: True se todos os arquivos de índice existem, False caso contrário.
+    """
+    try:
+        index_path = os.getenv("DATA_INDEX_PATH")
+        meta_path = os.getenv("DATA_META_PATH")
+        embeddings_path = os.getenv("DATA_EMBEDDINGS_PATH")
+
+        if not all([index_path, meta_path, embeddings_path]):
+            return False
+
+        return (
+            Path(index_path).exists() and
+            Path(meta_path).exists() and
+            Path(embeddings_path).exists()
+        )
+    except Exception:
+        return False
+
+
 def load_index_and_meta() -> tuple[faiss.Index, list[dict[str, Any]], np.ndarray]:
 
-    if INDEX_PATH := os.getenv("DATA_INDEX_PATH") is None:
+    if (INDEX_PATH := os.getenv("DATA_INDEX_PATH")) is None:
         raise EnvironmentVariableError(
             "DATA_INDEX_PATH environment variable is not set. "
             "Please run: python rag.py index"
         )
 
-    if META_PATH := os.getenv("DATA_META_PATH") is None:
+    if (META_PATH := os.getenv("DATA_META_PATH")) is None:
         raise EnvironmentVariableError(
             "Metadata not found."
         )
 
-    if EMBEDDINGS_PATH := os.getenv("DATA_EMBEDDINGS_PATH") is None:
+    if (EMBEDDINGS_PATH := os.getenv("DATA_EMBEDDINGS_PATH")) is None:
         raise EnvironmentVariableError(
             "DATA_EMBEDDINGS_PATH environment variable is not set."
         )
@@ -52,7 +77,7 @@ def search(query: str, top_k: int = 4) -> list[dict[str, Any]]:
         query: The search query string.
         top_k: The number of top results to return.
     """
-    if EMBEDDINGS_MODEL := os.getenv("EMBEDDINGS_MODEL") is None:
+    if (EMBEDDINGS_MODEL := os.getenv("EMBEDDINGS_MODEL")) is None:
         raise EnvironmentVariableError(
             "EMBEDDINGS_MODEL variable is not set. "
             "Please check your configuration."

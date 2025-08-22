@@ -23,25 +23,26 @@ def load_corpus_chunks() -> tuple[list[str], list[dict[str, Any]]]:
     Each metadata includes: {"doc": filename, "chunk_id": i, "text": chunk}
     """
 
-    if CORPUS_DIR := os.getenv("DATA_CORPUS_PATH") is None:
+    if (CORPUS_DIR := os.getenv("DATA_CORPUS_PATH")) is None:
         raise CorpusDataDoesNotExist("Could not find corpus data! Check the folder.")
 
-    if CHUNK_SIZE := os.getenv("CHUNK_SIZE") is None:
+    if (CHUNK_SIZE := os.getenv("CHUNK_SIZE")) is None:
         raise EnvironmentVariableError("CHUNK_SIZE environment variable is not set.")
 
-    if CHUNK_OVERLAP := os.getenv("CHUNK_OVERLAP") is None:
+    if (CHUNK_OVERLAP := os.getenv("CHUNK_OVERLAP")) is None:
         raise EnvironmentVariableError("CHUNK_OVERLAP environment variable is not set.")
 
     all_chunks, meta = [], []
 
-    for p in sorted(glob(os.sep.join([CORPUS_DIR, "*.txt"]))):
+    for p in sorted(glob(os.path.join(CORPUS_DIR, "*.txt"))):
 
-        txt = p.read_text(encoding="utf-8", errors="ignore")
-        chunks = chunk_text(txt, CHUNK_SIZE, CHUNK_OVERLAP)
+        with open(p, 'r', encoding="utf-8", errors="ignore") as f:
+            txt = f.read()
+        chunks = chunk_text(txt, int(CHUNK_SIZE), int(CHUNK_OVERLAP))
 
         for i, ch in enumerate(chunks):
             all_chunks.append(ch)
-            meta.append({"doc": p.name, "chunk_id": i, "text": ch})
+            meta.append({"doc": os.path.basename(p), "chunk_id": i, "text": ch})
 
     return all_chunks, meta
 
